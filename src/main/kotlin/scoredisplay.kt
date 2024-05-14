@@ -25,7 +25,8 @@ object ScoreDisplay { // Controla o mostrador de pontuação.
     }
     // Envia comando para desativar/ativar a visualização do mostrador de pontuação
     fun off(value: Boolean){
-
+        val turnoff = 0b1110001
+        SerialEmitter.send(SerialEmitter.Destination.SCORE,turnoff,7)
     }
 }
 fun main(){
