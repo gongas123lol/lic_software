@@ -9,8 +9,20 @@ fun main(args: Array<String>) {
 
     HAL.clrBits(0x10)
     HAL.setBits(0x10)*/
+
+   //Time.sleep(2000)
+   HAL.init()
+
+   SerialEmitter.init()
    LCD.init()
-   LCD.write("L")
+   LCD.write("LIC CRL")
+
+   var key = KBD.getKey()
+   while(true){
+      key = KBD.getKey()
+      println(key)
+      Thread.sleep(10)
+   }
    Time.sleep(1000)
    LCD.cursor(0,7)
    LCD.write('d')
@@ -23,4 +35,6 @@ fun main(args: Array<String>) {
 
    Time.sleep(3000)
    LCD.clear()
+
+
 }

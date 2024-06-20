@@ -8,14 +8,14 @@ object LCD {
 
     private const val LINES = 2 //Dimensão do display
     private const val COLS = 16
-    private const val SERIAL_INTERFACE = false //define se a interface é série ou paralela
+    private const val SERIAL_INTERFACE = true //define se a interface é série ou paralela
     const val RS_MASK = 0x40
     const val E_MASK = 0x20
     const val CLK_REG_MASK = 0x10
     const val DATA_LOW = 0x0F
     const val DATA_HIGH = 0xF0
     const val SHIFT_4BITS_RIGHT = 4
-    const val WAITTIME1 = 15 //tempos de espera na iniciação do LCD
+    const val WAITTIME1 = 15
     const val WAITTIME2 = 4.1
     const val WAITTIME3 = 0.0001
 
@@ -48,9 +48,7 @@ object LCD {
 
     //escreve um byte de comandos/dados no LCD em série
     private fun writeByteSerial(rs:Boolean, data: Int){
-        if(rs==true)
-            HAL.setBits(RS_MASK) //põe o bit de RS a 1
-        print("$data")//só para verificar se
+        SerialEmitter.send(SerialEmitter.Destination.LCD,data,8)
     }
 
     //escreve um byte de comando/dados no LCD
@@ -61,12 +59,22 @@ object LCD {
 
     //escrever um comando no LCD
     private fun writeCMD(data: Int){
-        writeByteParallel(false,data)
+        if(SERIAL_INTERFACE){
+            SerialEmitter.send(SerialEmitter.Destination.LCD,(data shl 1),9)
+        }else{
+            writeByteParallel(false,data)
+        }
+
     }
 
     //escrever um dado no LCD
     private fun writeDATA(data: Int){
-        writeByteParallel(true,data)
+        if(SERIAL_INTERFACE){
+           SerialEmitter.send(SerialEmitter.Destination.LCD,((data shl 1) or 1),9)
+        }else{
+            writeByteParallel(true,data)
+        }
+
     }
 
     //enviar a sequência de iniciação para a comunicação de 8 bits
@@ -81,7 +89,7 @@ object LCD {
         writeCMD(0b0011_1000)//F=0, pois 5x10 dots ; N=1, pois 2lines
         writeCMD(0b0000_1000)
         writeCMD(0b0000_0001)
-        writeCMD(0b0000_0111)//S=1 ; I/D=1, pois
+        writeCMD(0b0000_0110)//S=0 ; I/D=1, pois
         writeCMD(0b0000_1111)
     }
 

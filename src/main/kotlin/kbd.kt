@@ -1,55 +1,56 @@
-import HAL
+import isel.leic.utils.Time
 
 object KBD { // Ler teclas. Métodos retornam ‘0’..’9’,’#’,’*’ ou NONE.
-    const val KBDMASK = 0xFF
-    const val KVALMASK = 0x01
-    const val NONE = 0
-    // Inicia a classe
-    fun init(){
+    const val NONE = 0;
+    val KACK_MSK = 0b10000000
+    val KVAL_MSK = 0b00010000
+    val KMSK = 0x0F
+    val digits = arrayOf('1', '4', '7', '*', '2', '5', '8', '0', '3', '6', '9', '#' , NONE.toChar(), NONE.toChar(), NONE.toChar(), NONE.toChar())
+    var isEnabled = true
 
+    // Inicia a classe
+    fun init() {
+        HAL.clrBits(KACK_MSK)
     }
-// Retorna de imediato a tecla premida ou NONE se não há tecla premida.
-    fun getKey(): Char {
-        if(HAL.isBit(KVALMASK)){
-            val data = HAL.readBits(KBDMASK)
-            return getchar(data)
-        }else {
+
+    // Retorna de imediato a tecla premida ou NONE se não há tecla premida.
+    fun getKey(): Char { // Executa a rotina de ler a key, de acordo com o diagrama temporal
+
+        if(isEnabled) {
+            if (HAL.readBits(KVAL_MSK) > 0) {
+                val key = HAL.readBits(KMSK)
+                HAL.setBits(KACK_MSK)
+                while (HAL.isBit(KVAL_MSK)) {
+                }
+                HAL.clrBits(KACK_MSK)
+                return digits[key]  // Vai buscar o digito em questão ao array de digitos
+            }
             return NONE.toChar()
         }
+        else return NONE.toChar()
+    }
 
-    }
-// Retorna a tecla premida, caso ocorra antes do ‘timeout’ (representado em milissegundos), ou NONE caso contrário.
+
+    // Retorna a tecla premida, caso ocorra antes do ‘timeout’ (representado em milissegundos), ou NONE caso contrário.
     fun waitKey(timeout: Long): Char {
-    var curr = 0
-    while (curr < timeout) {
-        Thread.sleep(1)
-        val key = getKey()
-        if (key != NONE.toChar()) {
-            return key
+        if(isEnabled) {
+            val t = Time.getTimeInMillis()  // Valor atual de tempo
+            while (Time.getTimeInMillis() - t < timeout) {  // Enquanto o tempo passado for inferior ao timeout, vai se buscar a key.
+                val key = getKey()
+                if (key != NONE.toChar()) return key
+            }
+            return NONE.toChar()
         }
-        curr++
+        else return NONE.toChar()
     }
-    return NONE.toChar()
 }
 
-    fun getchar(value: Int): Char{
-        return when(value){
+fun main() {
+    HAL.init()
+    KBD.init()
 
-            0b0000 -> '1'
-            0b0100 -> '2'
-            0b1000 -> '3'
-            0b0001 -> '4'
-            0b0101 -> '5'
-            0b1001 -> '6'
-            0b0010 -> '7'
-            0b0110 -> '8'
-            0b1010 -> '9'
-            0b0011 -> '*'
-            0b0111 -> '0'
-            0b1011 -> '#'
-
-            else-> NONE.toChar()
-
-        }
+    while(true){
+        println(KBD.waitKey(1000))
     }
+
 }

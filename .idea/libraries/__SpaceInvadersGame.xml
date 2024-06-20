@@ -1,7 +1,7 @@
 <component name="libraryTable">
-  <library name="usbPort">
+  <library name="._SpaceInvadersGame">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/usbPort.jar!/" />
+      <root url="jar://$PROJECT_DIR$/._SpaceInvadersGame.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

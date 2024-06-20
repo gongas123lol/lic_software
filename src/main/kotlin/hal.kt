@@ -25,7 +25,7 @@ object HAL { // Virtualiza o acesso ao sistema UsbPort
     }
     // Coloca os bits representados por mask no valor lógico ‘1’
     fun setBits(mask: Int){ // funciona
-        val b = currOut xor mask
+        val b = currOut or mask
         UsbPort.write(b)
         currOut = b
         return
