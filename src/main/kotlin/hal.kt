@@ -10,12 +10,14 @@ object HAL { // Virtualiza o acesso ao sistema UsbPort
     }
     // Retorna true se o bit tiver o valor lógico ‘1’
     fun isBit(mask: Int): Boolean {
+        currOut = UsbPort.read()
         val res = mask and currOut
-        return (res xor mask) == 0
+        return res != 0
     }
     // Retorna os valores dos bits representados por mask presentes no UsbPort
     fun readBits(mask: Int): Int{
-        return mask and UsbPort.read()
+        currOut = UsbPort.read()
+        return mask and currOut
     }
     // Escreve nos bits representados por mask os valores dos bits correspondentes em value
     fun writeBits(mask: Int, value: Int){
