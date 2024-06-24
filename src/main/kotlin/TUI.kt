@@ -7,11 +7,11 @@ import kotlin.random.Random
 object TUI {
 
     data class Score(var name: String, var score: Int)
-    const val filename = "C:\\Users\\ferra\\Desktop\\HelloWorld_LIC\\HelloWorld_LIC\\src\\main\\kotlin\\scores"
+    const val filename = "src/main/kotlin/scores"
     const val M_MASK = 0b10000000
     const val COIN_MASK = 0b01000000
     const val COINACK_MASK = 0b001000000
-    const val gamedata_filename = "C:\\Users\\ferra\\Desktop\\HelloWorld_LIC\\HelloWorld_LIC\\src\\main\\kotlin\\gamedata"
+    const val gamedata_filename = "src/main/kotlin/gamedata"
     var credits = 0
     var scores = mutableListOf<Score>()
     var Maintenance = false
