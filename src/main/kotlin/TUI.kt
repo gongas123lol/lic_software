@@ -41,30 +41,34 @@ object TUI {
         LCD.write("1eur = 2 credits")
         var lastScoreDisplayTime = LocalTime.now()
         Maintenance = HAL.isBit(M_MASK)
+        var cl = KBD.waitKey(10)
 
-        while (KBD.waitKey(10) != '#' && !Maintenance) {
+        while (cl != '#' && !Maintenance) {
+            cl = KBD.waitKey(10)
+            if(cl == '*'){
+                turnoff()
+            }
+
             Maintenance = HAL.isBit(M_MASK)
-            if(HAL.isBit(COIN_MASK)){
+            if(coinAcceptor.read()){
                 credits += 2
-                HAL.setBits(COINACK_MASK)
-                HAL.clrBits(COINACK_MASK)
+                println("coin in")
+                coinAcceptor.accept()
             }
             val currentTime = LocalTime.now()
             if(lastScoreDisplayTime.plusSeconds(20).isBefore(currentTime)){
                 while(displayscores() != 1) {
-                    // Keep displaying scores until a key is pressed
                 }
                 lastScoreDisplayTime = currentTime
             }
         }
-        println("aaa")
-        // play stage
         if (credits <= 0 && !Maintenance) {
             mainMenu() // no money no play
         } else {
             playgame()
         }
     }
+
 
     private fun playgame() {
         LCD.clear()
@@ -84,28 +88,31 @@ object TUI {
         )
         enemies[0][15] = '#'
         enemies[1][15] = '#'
+        gamecnt++
+        var currScore = Score("wip",0)
+        var tickCounter = 0
+        val enemySpeed = 10 // Number of ticks before enemies move
+        val spawnFrequency = 30 // Number of ticks before a new enemy spawns
 
         while (true) {
+            // Check for key press to move player or kill enemy
             val key = KBD.waitKey(100)
             if (key == '2') playerpos = 0
             if (key == '5') playerpos = 1
-
-            // Check for '#' to kill the enemy
             if (key == '#') {
                 if (playerpos == 0 && enemies[0].contains('#')) {
                     // Kill enemy on line 0
                     enemies[0][enemies[0].indexOf('#')] = ' '
+                    currScore.score++
+
                 } else if (playerpos == 1 && enemies[1].contains('#')) {
                     // Kill enemy on line 1
                     enemies[1][enemies[1].indexOf('#')] = ' '
+                    currScore.score++
                 }
-                // Add a new random enemy in one of the lines
-                val newEnemyLine = Random.nextInt(2) // Randomly choose line 0 or 1
-                val newEnemyPos = 15 // Start at the rightmost position
-                enemies[newEnemyLine][newEnemyPos] = '#'
             }
 
-            // Update player position without clearing the screen
+            // Update player position
             if (playerpos == 0) {
                 LCD.cursor(0, 0)
                 LCD.write('P')
@@ -118,58 +125,111 @@ object TUI {
                 LCD.write('P')
             }
 
-            // Clear the screen except for player position
-            LCD.cursor(0, 1)
-            LCD.write(" ".repeat(15))
-            LCD.cursor(1, 1)
-            LCD.write(" ".repeat(15))
-
-            // Update enemies position
-            var playerDied = false
-            for (i in 15 downTo 1) {
-                if (enemies[0][i] == '#') {
-                    enemies[0][i] = ' '
-                    enemies[0][i - 1] = '#'
+            // Move enemies left every enemySpeed ticks
+            if (tickCounter % enemySpeed == 0) {
+                for (i in 0 until 15) {
+                    if (enemies[0][i + 1] == '#') {
+                        enemies[0][i] = '#'
+                        enemies[0][i + 1] = ' '
+                    }
+                    if (enemies[1][i + 1] == '#') {
+                        enemies[1][i] = '#'
+                        enemies[1][i + 1] = ' '
+                    }
                 }
-                if (enemies[1][i] == '#') {
-                    enemies[1][i] = ' '
-                    enemies[1][i - 1] = '#'
+
+                // Draw enemies
+                for (i in 0 until 16) {
+                    LCD.cursor(0, i + 1)
+                    LCD.write(enemies[0][i])
+                    LCD.cursor(1, i + 1)
+                    LCD.write(enemies[1][i])
+                }
+
+                // Check if player dies
+                if ((enemies[0][0] == '#' && playerpos == 0) || (enemies[1][0] == '#' && playerpos == 1)) {
+
+                    break
                 }
             }
 
-            // Check if player dies
-            if (enemies[0][0] == '#' && playerpos == 0) {
-                playerDied = true
-            }
-            if (enemies[1][0] == '#' && playerpos == 1) {
-                playerDied = true
+            // Spawn a new enemy every spawnFrequency ticks
+            if (tickCounter % spawnFrequency == 0) {
+                val newEnemyLine = Random.nextInt(2) // Randomly choose line 0 or 1
+                enemies[newEnemyLine][15] = '#'
             }
 
-            // Draw enemies
-            for (i in 0 until 16) {
-                LCD.cursor(0, i + 1)
-                LCD.write(enemies[0][i])
-                LCD.cursor(1, i + 1)
-                LCD.write(enemies[1][i])
-            }
-
-            if (playerDied) {
-                LCD.clear()
-                LCD.cursor(0, 0)
-                LCD.write("Game Over")
-                Thread.sleep(2000)
-                break
-            }
-
-            Thread.sleep(500)
+            tickCounter++
         }
+
+        LCD.clear()
+        LCD.cursor(0, 0)
+        LCD.write("game over")
+        LCD.cursor(1,0)
+        LCD.write("# -> exit")
+        while (KBD.waitKey(100) != '#') {
+            Thread.sleep(100)
+        }
+
         LCD.clear()
         LCD.cursor(0,0)
-        LCD.write("game over")
-        while (true){
+        val alphabet = ('A'..'Z').toList()
+        var cnt = 0
+        var written = ""
+        LCD.write("name?")
+        LCD.cursor(1, 0)
+        var currentchar = 'A'
+        while (true) {
+            LCD.cursor(1,0)
+            LCD.write("                ")
+            LCD.cursor(1,0)
+            LCD.write(written + currentchar)
+            val pressed = KBD.waitKey(100)
 
+            when (pressed) {
+                '#' -> {
+                    written = written + currentchar
+                }
+                '*' -> {
+                    // Move to the next letter in the alphabet
+                    cnt = (cnt + 1) % alphabet.size
+                    currentchar = alphabet[cnt]
+
+                }
+                '9' -> {
+                    // End input
+                    written += currentchar
+                    break
+                }
+                '8' -> {
+                    // Delete the last letter if there's any
+                    if (written.isNotEmpty()) {
+                        written = written.dropLast(1)
+                    }
+                }
+            }
         }
+
+        currScore.name = written
+        scores+= currScore
+        scores = scores.sortedByDescending { it.score }.toMutableList()
+
+        LCD.clear()
+        LCD.cursor(0, 0)
+        LCD.write(currScore.name + ": " + currScore.score.toString())
+        LCD.cursor(1, 0)
+        LCD.write("top " + scores.indexOf(currScore).toString())
+        Thread.sleep(3000)
+        //now we go back to the menu
+        mainMenu()
+
     }
+
+
+
+
+
+
 
 
 
@@ -178,7 +238,7 @@ object TUI {
         scores += Score(name, score)
     }
 
-    fun writeScoresToFile(scores: List<Score>, fileName: String) {
+    private fun writeScoresToFile(scores: List<Score>, fileName: String) {
         File(fileName).bufferedWriter().use { out ->
             for (score in scores) {
                 out.write("${score.name} ${score.score}")
@@ -187,7 +247,7 @@ object TUI {
         }
     }
 
-    fun writeDataToFile(gamecnt: Int, creditcnt: Int) {
+    private fun writeDataToFile(gamecnt: Int, creditcnt: Int) {
         File(gamedata_filename).bufferedWriter().use { out ->
             out.write("gamecounter: ${gamecnt}")
             out.newLine()
@@ -197,9 +257,20 @@ object TUI {
     }
 
     fun turnoff() {
+        LCD.clear()
+        LCD.cursor(0,0)
+        LCD.write("goodbye!")
+        LCD.cursor(1,0)
+        for(i in 0..15){
+            LCD.write('.')
+            Thread.sleep(200)
+        }
         // save the scores and data
         writeScoresToFile(scores, filename)
         writeDataToFile(gamecnt, creditcnt)
+
+        LCD.clear()
+
     }
 
     var counter = 0

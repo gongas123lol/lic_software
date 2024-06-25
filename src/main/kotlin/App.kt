@@ -1,5 +1,6 @@
 object App {
     fun init(){
+        coinAcceptor.read()
         HAL.init()
         TUI.init()
         LCD.init()
