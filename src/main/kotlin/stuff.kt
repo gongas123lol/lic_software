@@ -3,6 +3,7 @@ fun main(){
     HAL.init()
     LCD.init()
     KBD.init()
+
     while(true){
         val a = KBD.waitKey(10)
         if(a != KBD.NONE.toChar()){

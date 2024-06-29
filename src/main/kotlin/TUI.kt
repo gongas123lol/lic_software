@@ -37,7 +37,7 @@ object TUI {
         LCD.cursor(0, 0)
         LCD.write("SPACE INVADERS")
         LCD.cursor(1, 0)
-        LCD.write("1eur = 2 credits")
+        LCD.write("cr: ${credits}")
         var lastScoreDisplayTime = LocalTime.now()
         Maintenance = HAL.isBit(M_MASK)
         var cl = KBD.waitKey(10)
@@ -51,8 +51,10 @@ object TUI {
             Maintenance = HAL.isBit(M_MASK)
             if(coinAcceptor.read()){
                 credits += 2
+                creditcnt += 2
                 println("coin in")
                 coinAcceptor.accept()
+                mainMenu()
             }
             val currentTime = LocalTime.now()
             if(lastScoreDisplayTime.plusSeconds(20).isBefore(currentTime)){
@@ -63,8 +65,12 @@ object TUI {
         }
         if (credits <= 0 && !Maintenance) {
             mainMenu() // no money no play
-        } else {
+        } else if(credits > 0 && !Maintenance) {
+            credits--
             playgame()
+        }else if(Maintenance){
+            doMaintenance();
+
         }
     }
 
@@ -76,7 +82,7 @@ object TUI {
         LCD.cursor(1, 0)
         for (i in 0..15) {
             LCD.write(".")
-            Thread.sleep(200)
+            Time.sleep(200)
         }
         LCD.clear()
 
@@ -177,7 +183,7 @@ object TUI {
         LCD.cursor(1,0)
         LCD.write("# -> exit")
         while (KBD.waitKey(100) != '#') {
-            Thread.sleep(100)
+            Time.sleep(100)
         }
 
         LCD.clear()
@@ -229,7 +235,7 @@ object TUI {
         LCD.write(currScore.name + ": " + currScore.score.toString())
         LCD.cursor(1, 0)
         LCD.write("top " + scores.indexOf(currScore).toString())
-        Thread.sleep(3000)
+        Time.sleep(5000)
         //now we go back to the menu
         mainMenu()
 
@@ -273,7 +279,7 @@ object TUI {
         LCD.cursor(1,0)
         for(i in 0..15){
             LCD.write('.')
-            Thread.sleep(200)
+            Time.sleep(200)
         }
         // save the scores and data
         writeScoresToFile(scores, filename)
@@ -310,14 +316,47 @@ object TUI {
         }
         return 0
     }
+    fun doMaintenance(){
+        LCD.clear()
+        LCD.cursor(0,0)
+        LCD.write("play:1,Conslt:#")
+        LCD.cursor(1,0)
+        LCD.write("off: 2,MM:*")
+
+        var choosen = KBD.waitKey(100)
+        while(choosen == KBD.NONE.toChar()){
+            choosen = KBD.waitKey(100)
+
+            if(choosen == '1'){
+                playgame()
+            }else if(choosen == '#'){
+                LCD.clear()
+                LCD.cursor(0,0)
+                LCD.write("total games: ${gamecnt}")
+                LCD.cursor(1,0)
+                LCD.write("total credits: ${creditcnt}")
+                while (KBD.waitKey(100) != '#'){
+                }
+                mainMenu()
+            }else if(choosen == '2'){
+                LCD.clear()
+                LCD.write("Good Bye!")
+                Time.sleep(2000)
+                turnoff()
+            }
+            else if(choosen == '*'){
+                mainMenu()
+            }
+        }
+    }
 }
 
 fun main() {
     KBD.init()
     LCD.init()
     TUI.init()
-    Thread.sleep(100)
+    Time.sleep(100)
    TUI.mainMenu()
-    while(TUI.displayscores() != 1){} // loop enquanto n faz nada
+    //while(TUI.displayscores() != 1){} // loop enquanto n faz nada
     LCD.clear()
 }
