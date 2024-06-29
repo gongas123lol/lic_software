@@ -16,6 +16,7 @@ object TUI {
     var Maintenance = false
     var gamecnt = 0
     var creditcnt = 0
+    var isOn = true
 
     fun init() {
         // init part
@@ -34,6 +35,7 @@ object TUI {
     }
 
     fun mainMenu() {
+        LCD.clear()
         LCD.cursor(0, 0)
         LCD.write("SPACE INVADERS")
         LCD.cursor(1, 0)
@@ -57,7 +59,7 @@ object TUI {
                 mainMenu()
             }
             val currentTime = LocalTime.now()
-            if(lastScoreDisplayTime.plusSeconds(20).isBefore(currentTime)){
+            if(lastScoreDisplayTime.plusSeconds(20).isBefore(currentTime) && isOn){
                 while(displayscores() != 1) {
                 }
                 lastScoreDisplayTime = currentTime
@@ -273,6 +275,7 @@ object TUI {
     }
 
     fun turnoff() {
+        isOn = false
         LCD.clear()
         LCD.cursor(0,0)
         LCD.write("goodbye!")
@@ -286,6 +289,9 @@ object TUI {
         writeDataToFile(gamecnt, creditcnt)
 
         LCD.clear()
+        while (true){
+
+        }
 
     }
 
