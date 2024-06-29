@@ -9,8 +9,7 @@ object TUI {
     data class Score(var name: String, var score: Int)
     const val filename = "src/main/kotlin/scores"
     const val M_MASK = 0b10000000
-    const val COIN_MASK = 0b01000000
-    const val COINACK_MASK = 0b001000000
+
     const val gamedata_filename = "src/main/kotlin/gamedata"
     var credits = 0
     var scores = mutableListOf<Score>()
@@ -91,8 +90,8 @@ object TUI {
         gamecnt++
         var currScore = Score("wip",0)
         var tickCounter = 0
-        val enemySpeed = 10 // Number of ticks before enemies move
-        val spawnFrequency = 30 // Number of ticks before a new enemy spawns
+        var enemySpeed = 5 // Number of ticks before enemies move
+        var spawnFrequency = 30 // Number of ticks before a new enemy spawns
 
         while (true) {
             // Check for key press to move player or kill enemy
@@ -104,11 +103,21 @@ object TUI {
                     // Kill enemy on line 0
                     enemies[0][enemies[0].indexOf('#')] = ' '
                     currScore.score++
+                    //enemySpeed++
+                    if(spawnFrequency > 10){
+                        spawnFrequency--
+                    }
+                    ScoreDisplay.setScore(currScore.score)
 
                 } else if (playerpos == 1 && enemies[1].contains('#')) {
                     // Kill enemy on line 1
                     enemies[1][enemies[1].indexOf('#')] = ' '
                     currScore.score++
+                    //enemySpeed++
+                    if(spawnFrequency > 10){
+                        spawnFrequency--
+                    }
+                    ScoreDisplay.setScore(currScore.score)
                 }
             }
 
@@ -189,6 +198,7 @@ object TUI {
             when (pressed) {
                 '#' -> {
                     written = written + currentchar
+                    currentchar = 'A'
                 }
                 '*' -> {
                     // Move to the next letter in the alphabet
