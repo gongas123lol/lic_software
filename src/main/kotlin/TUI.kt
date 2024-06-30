@@ -93,39 +93,40 @@ object TUI {
             CharArray(16) { ' ' }, // Enemies on line 0
             CharArray(16) { ' ' }  // Enemies on line 1
         )
-        enemies[0][15] = '#'
-        enemies[1][15] = '#'
+        enemies[0][15] = (Random.nextInt(1, 10) + '0'.toInt()).toChar()
+        enemies[1][15] = (Random.nextInt(1, 10) + '0'.toInt()).toChar()
         gamecnt++
-        var currScore = Score("wip",0)
+        var currScore = Score("wip", 0)
         var tickCounter = 0
         var enemySpeed = 5 // Number of ticks before enemies move
         var spawnFrequency = 30 // Number of ticks before a new enemy spawns
 
+        var selected = '*' // start aim
+
         while (true) {
-            // Check for key press to move player or kill enemy
+            // Check for key press to move player or change selected number
             val key = KBD.waitKey(100)
-            if (key == '*'){
-                if(playerpos == 0) playerpos = 1
-                else playerpos = 0
+            if (key in '0'..'9') {
+                selected = key
+            }
+            if (key == '*') {
+                playerpos = if (playerpos == 0) 1 else 0
             }
 
             if (key == '#') {
-                if (playerpos == 0 && enemies[0].contains('#')) {
-                    // Kill enemy on line 0
-                    enemies[0][enemies[0].indexOf('#')] = ' '
+                if (playerpos == 0 && enemies[0].any { it == selected }) {
+                    // Kill enemy on line 0 if it matches the selected number
+                    enemies[0][enemies[0].indexOfFirst { it == selected }] = ' '
                     currScore.score++
-                    //enemySpeed++
-                    if(spawnFrequency > 10){
+                    if (spawnFrequency > 10) {
                         spawnFrequency--
                     }
                     ScoreDisplay.setScore(currScore.score)
-
-                } else if (playerpos == 1 && enemies[1].contains('#')) {
-                    // Kill enemy on line 1
-                    enemies[1][enemies[1].indexOf('#')] = ' '
+                } else if (playerpos == 1 && enemies[1].any { it == selected }) {
+                    // Kill enemy on line 1 if it matches the selected number
+                    enemies[1][enemies[1].indexOfFirst { it == selected }] = ' '
                     currScore.score++
-                    //enemySpeed++
-                    if(spawnFrequency > 5){
+                    if (spawnFrequency > 5) {
                         spawnFrequency--
                     }
                     ScoreDisplay.setScore(currScore.score)
@@ -148,12 +149,12 @@ object TUI {
             // Move enemies left every enemySpeed ticks
             if (tickCounter % enemySpeed == 0) {
                 for (i in 0 until 15) {
-                    if (enemies[0][i + 1] == '#') {
-                        enemies[0][i] = '#'
+                    if (enemies[0][i + 1] in '1'..'9') {
+                        enemies[0][i] = enemies[0][i + 1]
                         enemies[0][i + 1] = ' '
                     }
-                    if (enemies[1][i + 1] == '#') {
-                        enemies[1][i] = '#'
+                    if (enemies[1][i + 1] in '1'..'9') {
+                        enemies[1][i] = enemies[1][i + 1]
                         enemies[1][i + 1] = ' '
                     }
                 }
@@ -167,8 +168,7 @@ object TUI {
                 }
 
                 // Check if player dies
-                if ((enemies[0][0] == '#' && playerpos == 0) || (enemies[1][0] == '#' && playerpos == 1)) {
-
+                if ((enemies[0][0] in '1'..'9' && playerpos == 0) || (enemies[1][0] in '1'..'9' && playerpos == 1)) {
                     break
                 }
             }
@@ -176,7 +176,7 @@ object TUI {
             // Spawn a new enemy every spawnFrequency ticks
             if (tickCounter % spawnFrequency == 0) {
                 val newEnemyLine = Random.nextInt(2) // Randomly choose line 0 or 1
-                enemies[newEnemyLine][15] = '#'
+                enemies[newEnemyLine][15] = (Random.nextInt(1, 10) + '0'.toInt()).toChar()
             }
 
             tickCounter++
@@ -185,14 +185,14 @@ object TUI {
         LCD.clear()
         LCD.cursor(0, 0)
         LCD.write("game over")
-        LCD.cursor(1,0)
+        LCD.cursor(1, 0)
         LCD.write("# -> exit")
         while (KBD.waitKey(100) != '#') {
             Time.sleep(100)
         }
 
         LCD.clear()
-        LCD.cursor(0,0)
+        LCD.cursor(0, 0)
         val alphabet = ('A'..'Z').toList()
         var cnt = 0
         var written = ""
@@ -200,9 +200,9 @@ object TUI {
         LCD.cursor(1, 0)
         var currentchar = 'A'
         while (true) {
-            LCD.cursor(1,0)
+            LCD.cursor(1, 0)
             LCD.write("                ")
-            LCD.cursor(1,0)
+            LCD.cursor(1, 0)
             LCD.write(written + currentchar)
             val pressed = KBD.waitKey(100)
 
@@ -215,7 +215,6 @@ object TUI {
                     // Move to the next letter in the alphabet
                     cnt = (cnt + 1) % alphabet.size
                     currentchar = alphabet[cnt]
-
                 }
                 '9' -> {
                     // End input
@@ -232,7 +231,7 @@ object TUI {
         }
 
         currScore.name = written
-        scores+= currScore
+        scores += currScore
         scores = scores.sortedByDescending { it.score }.toMutableList()
 
         LCD.clear()
@@ -243,8 +242,9 @@ object TUI {
         Time.sleep(5000)
         //now we go back to the menu
         mainMenu()
-
     }
+
+
 
 
 
