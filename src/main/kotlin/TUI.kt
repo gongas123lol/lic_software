@@ -104,8 +104,11 @@ object TUI {
         while (true) {
             // Check for key press to move player or kill enemy
             val key = KBD.waitKey(100)
-            if (key == '2') playerpos = 0
-            if (key == '5') playerpos = 1
+            if (key == '*'){
+                if(playerpos == 0) playerpos = 1
+                else playerpos = 0
+            }
+
             if (key == '#') {
                 if (playerpos == 0 && enemies[0].contains('#')) {
                     // Kill enemy on line 0
@@ -122,7 +125,7 @@ object TUI {
                     enemies[1][enemies[1].indexOf('#')] = ' '
                     currScore.score++
                     //enemySpeed++
-                    if(spawnFrequency > 10){
+                    if(spawnFrequency > 5){
                         spawnFrequency--
                     }
                     ScoreDisplay.setScore(currScore.score)
@@ -132,14 +135,14 @@ object TUI {
             // Update player position
             if (playerpos == 0) {
                 LCD.cursor(0, 0)
-                LCD.write('P')
+                LCD.write('>')
                 LCD.cursor(1, 0)
                 LCD.write(' ')
             } else {
                 LCD.cursor(0, 0)
                 LCD.write(' ')
                 LCD.cursor(1, 0)
-                LCD.write('P')
+                LCD.write('>')
             }
 
             // Move enemies left every enemySpeed ticks
@@ -278,7 +281,7 @@ object TUI {
         isOn = false
         LCD.clear()
         LCD.cursor(0,0)
-        LCD.write("goodbye!")
+        LCD.write("shutting down")
         LCD.cursor(1,0)
         for(i in 0..15){
             LCD.write('.')
@@ -338,10 +341,25 @@ object TUI {
             }else if(choosen == '#'){
                 LCD.clear()
                 LCD.cursor(0,0)
-                LCD.write("total games: ${gamecnt}")
+                LCD.write("ttl games: ${gamecnt}")
                 LCD.cursor(1,0)
-                LCD.write("total credits: ${creditcnt}")
-                while (KBD.waitKey(100) != '#'){
+                LCD.write("ttl crd: ${creditcnt}")
+                var input = KBD.waitKey(100)
+                while (input != '#'){
+                    if(input == '*'){
+
+                        creditcnt = 0
+                        gamecnt = 0
+
+                        writeDataToFile(gamecnt,creditcnt)
+
+                        LCD.clear()
+                        LCD.cursor(0,0)
+                        LCD.write("cleared!")
+                        Time.sleep(3000)
+                        break
+                    }
+                    input = KBD.waitKey(100)
                 }
                 mainMenu()
             }else if(choosen == '2'){
@@ -362,7 +380,7 @@ fun main() {
     LCD.init()
     TUI.init()
     Time.sleep(100)
-   TUI.mainMenu()
+    TUI.mainMenu()
     //while(TUI.displayscores() != 1){} // loop enquanto n faz nada
     LCD.clear()
 }
